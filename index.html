@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIIP Vocabulary Quiz App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruuy+Pro:wght@400;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0A0E1A;
+            --card-color: #161B2E;
+            --primary-color: #FFC107;
+            --correct-color: #10B981;
+            --incorrect-color: #EF4444;
+            --text-main: #FFFFFF;
+            --text-sub: #94A3B8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kantumruuy Pro', 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-color);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #2A324B;
+            padding-bottom: 15px;
+        }
+
+        .score-board {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #2A324B;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .question-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .word-korean {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+        }
+
+        .word-translation {
+            font-size: 1.1rem;
+            color: var(--text-sub);
+            margin-top: 5px;
+            display: none; /* បង្ហាញពេលចុច Power-up បកប្រែ */
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+
+        .audio-btn:active {
+            transform: scale(0.9);
+        }
+
+        .power-ups {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .power-btn {
+            background-color: #2A324B;
+            color: white;
+            border: 1px solid #3F4C74;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .power-btn:hover {
+            background-color: #3F4C74;
+        }
+
+        .power-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background-color: #232A45;
+            color: white;
+            border: 2px solid #343E63;
+            padding: 15px;
+            text-align: left;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            background-color: #2D3759;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color) !important;
+            border-color: var(--correct-color) !important;
+            color: white;
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--incorrect-color) !important;
+            border-color: var(--incorrect-color) !important;
+            color: white;
+        }
+
+        .next-section {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .next-btn {
+            background-color: var(--primary-color);
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none;
+            font-size: 1rem;
+        }
+
+        /* លទ្ធផលចុងក្រោយ & Review Mode */
+        .result-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .review-list {
+            margin-top: 30px;
+            text-align: left;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .review-item {
+            background-color: #1F263E;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .review-ko {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .review-kh {
+            color: var(--primary-color);
+            margin-top: 4px;
+        }
+
+        .review-explanation {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #2D3759;
+        }
+
+        .restart-btn {
+            background-color: var(--correct-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+
+        /* Scrollbar សម្រាប់ Review List */
+        .review-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .review-list::-webkit-scrollbar-thumb {
+            background-color: #3F4C74;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="quiz-container">
+        <header>
+            <div id="qn-count">សំណួរ: 1/71</div>
+            <div class="score-board" id="score-display">ពិន្ទុ: 0</div>
+        </header>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="question-section">
+            <div class="word-korean" id="ko-word">대가족</div>
+            <button class="audio-btn" id="speak-btn" onclick="playCurrentAudio()">🔈</button>
+            <div class="word-translation" id="kh-translation">គ្រួសារធំ (មានច្រើនជំនាន់)</div>
+        </div>
+
+        <div class="power-ups">
+            <button class="power-btn" id="power-hint" onclick="useHint()">👁️ បកប្រែសំណួរ</button>
+            <button class="power-btn" id="power-5050" onclick="use5050()">✂️ កាត់ ៥០/៥០</button>
+        </div>
+
+        <div class="options-grid" id="options-block">
+            </div>
+
+        <div class="next-section">
+            <button class="next-btn" id="btn-next" onclick="nextQuestion()">បន្ទាប់ ➔</button>
+        </div>
+    </div>
+
+    <div class="container result-screen" id="result-container">
+        <h2 class="result-title">🎉 បញ្ចប់ការធ្វើ Quiz!</h2>
+        <p id="final-score" style="font-size: 1.3rem; margin-bottom: 20px;">អ្នកទទួលបានពិន្ទុ: 0 / 71</p>
+        
+        <hr style="border-color: #2A324B; margin: 20px 0;">
+        <h3 style="text-align: left; color: var(--text-sub);">📝 របៀបរំលឹកចម្លើយ (Review Mode)</h3>
+        
+        <div class="review-list" id="review-box">
+            </div>
+
+        <button class="restart-btn" onclick="restartQuiz()">លេងឡើងវិញ 🔄</button>
+    </div>
+
+    <script>
+        // ១. បញ្ជីពាក្យសព្ទទាំង ៧១ ម៉ាត់ និងការពន្យល់ពាក្យលម្អិត
+        const vocabData = [
+            { ko: "대가족", kh: "គ្រួសារធំ", exp: "គ្រួសារដែលមានសមាជិករស់នៅជុំគ្នា ចាប់ពី ៣ ជំនាន់ឡើងទៅ (តាជីដូន ឪពុកម្តាយ និងកូនៗ)។" },
+            { ko: "전망", kh: "ទស្សនវិស័យ / ការមើលឃើញទៅអនាគត", exp: "ការគិត ឬការទស្សន៍ទាយអំពីសភាពការណ៍នាពេលខាងមុខ។" },
+            { ko: "쑥쑥", kh: "យ៉ាងលឿន / ត្រដែត (ការលូតលាស់)", exp: "ពាក្យឧបមាបង្ហាញពីការលូតលាស់របស់កុមារ ឬការកើនឡើងនៃអ្វីមួយយ៉ាងលឿន។" },
+            { ko: "핵가족", kh: "គ្រួសារតូច", exp: "គ្រួសារដែលមានតែប្តីប្រពន្ធ និងកូនៗមិនទាន់រៀបការរស់នៅជាមួយគ្នា។" },
+            { ko: "(수업에) 빠지다", kh: "អវត្តមាន / អត់បានឡើងថ្នាក់", exp: "ការមិនបានចូលរួមក្នុងម៉ោងសិក្សា ឬខកខានការរៀនសូត្រ។" },
+            { ko: "시행하다", kh: "អនុវត្ត / ដាក់ឱ្យដំណើរការ", exp: "ការចាប់ផ្តើមអនុវត្តច្បាប់ គម្រោង ឬគោលនយោបាយជាផ្លូវការ។" },
+            { ko: "부모님을 모시다", kh: "ចិញ្ចឹមបីបាច់ ឬថែរក្សាឪពុកម្តាយ", exp: "ការរស់នៅជាមួយ និងការមើលថែទាំកតញ្ញូតាចំពោះឪពុកម្តាយចាស់ជរា។" },
+            { ko: "복지", kh: "សុខុមាលភាព / សុខុមាលភាពសង្គម", exp: "ប្រព័ន្ធ ឬជំនួយដែលរៀបចំឡើងដើម្បីជួយឱ្យជីវភាពរស់នៅរបស់ប្រជាជនមានភាពល្អប្រសើរ។" },
+            { ko: "세대", kh: "ជំនាន់ / គ្រួសារ (ខ្នាតជំរឿន)", exp: "ក្រុមមនុស្សដែលមានអាយុប្រហាក់ប្រហែលគ្នា ឬសំដៅលើខ្នាតផ្ទះសម្បែង។" },
+            { ko: "지방", kh: "ខេត្ត / តំបន់ជនបទ", exp: "តំបន់ផ្សេងៗក្រៅពីទីក្រុងហ្សេអ៊ុល (Seoul) ឬទីក្រុងធំៗ។" },
+            { ko: "동행", kh: "ការធ្វើដំណើរកំដរ / ដំណើររួមគ្នា", exp: "ការទៅណាមកណាជាមួយគ្នា ឬការរួមដំណើរជាមួយអ្នកដទៃ។" },
+            { ko: "쌍", kh: "គូ", exp: "ពាក្យរាប់ចំនួនវត្ថុ ឬមនុស្សដែលនៅជាគូជាមួយគ្នា (ឧទាហរណ៍៖ ប្តីប្រពន្ធមួយគូ)។" },
+            { ko: "유대가 깊다", kh: "មានចំណងទាក់ទងស៊ីជម្រៅ", exp: "មានទំនាក់ទំនង មនោសញ្ចេតនា ឬការយល់ចិត្តគ្នាយ៉ាងស្អិតរមួត។" },
+            { ko: "식구", kh: "សមាជិកគ្រួសារ", exp: "តាមន័យចំគឺ 'អ្នកហូបបាយជុំគ្នា' សំដៅលើមនុស្សដែលរស់នៅក្នុងផ្ទះជាមួយគ្នាដូចជាសាច់ញាតិ។" },
+            { ko: "사물 인터넷(IoT)", kh: "អ៊ីនធឺណិតនៃវត្ថុ (IoT)", exp: "បច្ចេកវិទ្យាដែលភ្ជាប់ឧបករណ៍ប្រើប្រាស់នានាទៅនឹងអ៊ីនធឺណិតដើម្បីបញ្ជាពីចម្ងាយ។" },
+            { ko: "분가하다", kh: "បែកផ្ទះ / ចេញទៅរស់នៅដាច់ដោយឡែក", exp: "ការដែលកូនរៀបការរួច ផ្លាស់ចេញពីផ្ទះឪពុកម្តាយទៅបង្កើតគ្រួសារផ្ទាល់ខ្លួន។" },
+            { ko: "육아 휴ចិក을 내다", kh: "ច្បាប់ឈប់សម្រាកមើលថែកូន", exp: "ការសុំច្បាប់ឈប់សម្រាកពីការងារមួយរយៈ ដើម្បីមើលថែទាំកូនតូច។" },
+            { ko: "감지되다", kh: "ត្រូវបានរកឃើញ / ចាប់សញ្ញាបាន", exp: "ការដឹង ឬរកឃើញអ្វីមួយតាមរយៈឧបករណ៍សេនស័រ (Sensor) ឬអារម្មណ៍។" },
+            { ko: "가사를 분담하다", kh: "ចែករំលែកការងារផ្ទះ", exp: "ការបែងចែកគ្នាធ្វើកិច្ចការក្នុងផ្ទះ (ដូចជាបោសជូត ធ្វើម្ហូប បោកខោអាវ) រវាងប្តីនិងប្រពន្ធ។" },
+            { ko: "평등하다", kh: "មានសមភាព / ស្មើភាពគ្នា", exp: "ភាពស្មើគ្នាក្នុងសិទ្ធិ អំណាច ឬឋានៈ ដោយមិនមានការរើសអើង។" },
+            { ko: "싱글족", kh: "ក្រុមមនុស្សរស់នៅម្នាក់ឯង (លីវ)", exp: "ពាក្យទំនើបហៅមនុស្សវ័យក្មេង ឬវ័យកណ្តាលដែលចូលចិត្តរស់នៅម្នាក់ឯង មិនទាន់រៀបការ។" },
+            { ko: "존중", kh: "ការគោរព / ការឱ្យតម្លៃ", exp: "ការឱ្យតម្លៃ និងស្តាប់មតិយោបល់ ឬសិទ្ធិបុគ្គលរបស់សហការី ឬអ្នកដទៃ។" },
+            { ko: "경제적인 부담", kh: "បន្ទុកសេដ្ឋកិច្ច / បន្ទុកហិរញ្ញវត្ថុ", exp: "ការលំបាក ឬការចំណាយប្រាក់កាសច្រើនហួសពីសមត្ថភាពក្នុងការរស់នៅ។" },
+            { ko: "불가피", kh: "ដែលមិនអាចជៀសវាងបាន", exp: "ស្ថានភាពមួយដែលត្រូវតែប្រឈមមុខ មិនអាចប្រកែក ឬគេចវេសបានឡើយ។" },
+            { ko: "다문화 가족", kh: "គ្រួសារពហុវប្បធម៌", exp: "គ្រួសារដែលកើតឡើងពីការរៀបការរវាងជនជាតិកូរ៉េ និងជនបរទេស។" },
+            { ko: "자체", kh: "ដោយខ្លួនឯង / ផ្ទាល់", exp: "សំដៅលើវត្ថុ ឬរឿងរ៉ាវនោះដោយចំៗ មិនបូករួមអ្វីផ្សេង។" },
+            { ko: "목숨을 구하다", kh: "សង្គ្រោះជីវិត", exp: "ការជួយសង្គ្រោះមនុស្ស ឬសត្វឱ្យរួចផុតពីគ្រោះថ្នាក់ដល់ជីវិត។" },
+            { ko: "맞벌이 부부", kh: "ប្តីប្រពន្ធធ្វើការទាំងពីរនាក់", exp: "គ្រួសារដែលទាំងប្តីនិងប្រពន្ធចេញរកស៊ី ឬធ្វើការរកចំណូលចូលផ្ទះដូចគ្នា។" },
+            { ko: "맏사위", kh: "កូនប្រសារប្រុសច្បង", exp: "ប្តីរបស់កូនស្រីច្បងនៅក្នុងគ្រួសារ។" },
+            { ko: "외벌이", kh: "ការរកចំណូលតែម្នាក់ឯង", exp: "ស្ថានភាពគ្រួសារដែលមានសមាជិកតែម្នាក់ (ប្តី ឬប្រពន្ធ) ចេញធ្វើការរកប្រាក់។" },
+            { ko: "1인 가구", kh: "គ្រួសារសមាជិកម្នាក់ (ផ្ទះនៅម្នាក់ឯង)", exp: "យូនីតគ្រួសារដែលមានមនុស្សតែម្នាក់គត់រស់នៅក្នុងផ្ទះមួយខ្នង។" },
+            { ko: "혼인율", kh: "អត្រាអាពាហ៍ពិពាហ៍", exp: "ភាគរយនៃការរៀបការរបស់ប្រជាជនក្នុងចំណោមចំនួនប្រជាជនសរុបក្នុងឆ្នាំនីមួយៗ។" },
+            { ko: "차지하다", kh: "ក្តោបក្តាប់ / យកអស់ (ភាគរយ)", exp: "ការទទួលបាន ឬមានចំនួនសមាមាត្រណាមួយនៅក្នុងស្ថិតិ។" },
+            { ko: "고령화", kh: "ការឡើងវ័យជរានៃប្រជាជន", exp: "ស្ថានភាពសង្គមដែលមានសមាមាត្រមនុស្សចាស់ (អាយុ ៦៥ ឡើង) កើនឡើងខ្ពស់។" },
+            { ko: "한 부모 가족", kh: "គ្រួសារមានអាណាព្យាបាលតែម្នាក់", exp: "គ្រួសារដែលមានតែឪពុក ឬម្តាយម្នាក់គត់រស់នៅចិញ្ចឹមកូន។" },
+            { ko: "역대", kh: "ក្នុងប្រវត្តិសាស្ត្រ / ក្នុងសម័យកាលកន្លងមក", exp: "ពាក្យប្រើប្រៀបធៀបកំណត់ត្រាដែលមិនធ្លាប់មានពីមុនមកតាំងពីដើមមក។" },
+            { ko: "주말부부", kh: "ប្តីប្រពន្ធរស់នៅឆ្ងាយគ្នា (ជួបគ្នាចុងសប្តាហ៍)", exp: "ប្តីប្រពន្ធដែលត្រូវរស់នៅបែកគ្នានៅថ្ងៃធ្វើការដោយសារការងារ ហើយជួបគ្នាតែថ្ងៃសៅរ៍-អាទិត្យ។" },
+            { ko: "최저", kh: "ទាបបំផុត", exp: "កម្រិត ឬចំនួនដែលស្ថិតនៅចំណុចបាតក្រោមគេបង្អស់។" },
+            { ko: "꼽다", exp: "ការជ្រើសរើស ឬចង្អុលបង្ហាញរឿង ឬអ្វីមួយជាឧទាហរណ៍ចម្បង។", kh: "ចាត់ទុកជា / លើកឡើង" },
+            { ko: "독거노인", kh: "ចាស់ជរារស់នៅម្នាក់ឯង", exp: "មនុស្សចាស់ដែលមានអាយុច្រើន ហើយរស់នៅម្នាក់ឯងគ្មានកូនចៅថែរក្សា។" },
+            { ko: "감소하다", kh: "ថយចុះ / ថយបរិមាណ", exp: "ការស្រកចុះ ឬថយចុះនៃចំនួន បរិមាណ ឬទំហំ។" },
+            { ko: "등장하다", kh: "លេចមុខឡើង / ផុសឡើង", exp: "ការបង្ហាញខ្លួនរបស់បាតុភូតថ្មី មនុស្សថ្មី ឬរបស់ថ្មីនៅក្នុងសង្គម។" },
+            { ko: "생필품", kh: "គ្រឿងឧបភោគបរិភោគចាំបាច់ប្រចាំថ្ងៃ", exp: "ទំនិញដែលមិនអាចខ្វះបានក្នុងជីវភាពរស់នៅប្រចាំថ្ងៃ (ដូចជា អង្ករ ទឹក ថ្នាំដុសធ្មេញ)។" },
+            { ko: "국제결혼", kh: "អាពាហ៍ពិពាហ៍អន្តរជាតិ", exp: "ការរៀបការរវាងមនុស្សពីរនាក់ដែលមានសញ្ជាតិខុសគ្នា។" },
+            { ko: "연령", kh: "អាយុ (ពាក្យផ្លូវការ)", exp: "ពាក្យប្រើក្នុងប្រព័ន្ធរដ្ឋបាល ឬស្ថិតិសម្រាប់ហៅចំនួនឆ្នាំដែលបានរស់នៅ។" },
+            { ko: "아이를 낳다", kh: "បង្កើតកូន / សម្រាលកូន", exp: "ការបង្កើតសមាជិកថ្មី ឬការឆ្លងទន្លេរបស់ស្ត្រី។" },
+            { ko: "이혼율", kh: "អត្រាលែងលះ", exp: "ស្ថិតិបង្ហាញពីភាគរយនៃការលែងលះគ្នារបស់ប្តីប្រពន្ធនៅក្នុងសង្គម។" },
+            { ko: "규모", kh: "ទំហំ / ខ្នាត", exp: "ទំហំ លក្ខណៈ ឬវិសាលភាពនៃរចនាសម្ព័ន្ធ ឬអង្គភាពណាមួយ។" },
+            { ko: "입양하다", kh: "យកកូនចិញ្ចឹម", exp: "ការទទួលកូនរបស់អ្នកដទៃមកធ្វើជាកូនបង្កើតរបស់ខ្លួនស្របច្បាប់។" },
+            { ko: "가치관", kh: "ប្រព័ន្ធតម្លៃ / ទស្សនៈជីវិត", exp: "ផ្នត់គំនិត ឬការកំណត់ខុសត្រូវ ល្អអាក្រក់ ទៅលើអ្វីមួយរបស់បុគ្គលម្នាក់ៗ។" },
+            { ko: "전통적", kh: "បែបប្រពៃណី / បុរាណ", exp: "អ្វីៗដែលតកូនចៅ និងអនុវត្តជាទម្លាប់តាំងពីជំនាន់មុនៗមក។" },
+            { ko: "독립하다", kh: "រស់នៅឯករាជ្យ / ម្ចាស់ការលើខ្លួនឯង", exp: "ការផ្លាស់ចេញពីការគ្រប់គ្រងរបស់ឪពុកម្តាយ ហើយរកលុយចិញ្ចឹមជីវិតដោយខ្លួនឯង។" },
+            { ko: "변화하다", kh: "ផ្លាស់ប្តូរ", exp: "ការប្រែប្រួលពីរូបរាង ឬស្ថានភាពមួយទៅស្ថានភាពមួយផ្សេងទៀត។" },
+            { ko: "정책", kh: "គោលនយោបាយ", exp: "ផែនការ ឬទិសដៅផ្លូវការដែលរដ្ឋាភិបាលរៀបចំឡើងដើម្បីដោះស្រាយបញ្ហាសង្គម។" },
+            { ko: "혼자 살다", kh: "រស់នៅម្នាក់ឯង", exp: "ការរស់នៅក្នុងផ្ទះដោយគ្មានសមាជិកផ្សេងទៀតនៅជាមួយឡើយ។" },
+            { ko: "경제 활동", kh: "សកម្មភាពសេដ្ឋកិច្ច", exp: "ការធ្វើការងារ ការផលិត ឬការលក់ដូរដើម្បីទទួលបានប្រាក់កម្រៃ។" },
+            { ko: "개선하다", kh: "កែលម្អឱ្យប្រសើរឡើង", exp: "ការកែប្រែចំណុចខ្វះខាត ឬរបស់មិនល្អឱ្យទៅជាល្អជាងមុន។" },
+            { ko: "재혼하다", kh: "រៀបការម្តងទៀត (អាពាហ៍ពិពាហ៍ទីពីរ)", exp: "ការរៀបការថ្មីម្តងទៀត បន្ទាប់ពីបានលែងលះ ឬប្តី/ប្រពន្ធស្លាប់ចោល។" },
+            { ko: "연속", kh: "ជាប់ៗគ្នា / បន្តបន្ទាប់", exp: "ការកើតឡើងនៃព្រឹត្តិការណ៍មួយទៅព្រឹត្តិការណ៍មួយទៀតដោយគ្មានការកាត់ដាច់។" },
+            { ko: "주거", kh: "ការស្នាក់នៅ / លំនៅឋាន", exp: "កន្លែង ឬផ្ទះសម្បែងសម្រាប់រស់នៅជាប្រចាំ។" },
+            { ko: "중시하다", kh: "ឱ្យតម្លៃខ្លាំង / ចាត់ទុកជាសំខាន់", exp: "ការគិតថាអ្វីមួយមានតម្លៃខ្លាំង ហើយយកចិត្តទុកដាក់លើវាជាចម្បង។" },
+            { ko: "노후", kh: "វ័យចាស់ជរា / ជីវិតចុងក្រោយ", exp: "ពេលវេលា ឬរយៈពេលបន្ទាប់ពីមនុស្សឈានចូលវ័យចាស់ ឬចូលនិវត្តន៍ពីការងារ។" },
+            { ko: "지원", kh: "ការគាំទ្រ / ជំនួយ", exp: "ការផ្តល់លុយកាក់ សម្ភារៈ ឬកម្លាំងដើម្បីជួយដល់អ្នកដទៃ។" },
+            { ko: "증가하다", kh: "កើនឡើង", exp: "ការកើនបរិមាណ ឬចំនួនកាន់តែច្រើនឡើងៗ។" },
+            { ko: "평균 수명", kh: "អាយុកាលជាមធ្យម", exp: "ចំនួនឆ្នាំជាមធ្យមដែលមនុស្សក្នុងសង្គមមួយអាចរស់នៅបាន។" },
+            { ko: "세심하다", kh: "ផ្ចិតផ្ចង់ / យកចិត្តទុកដាក់ល្អិតល្អន់", exp: "ការធ្វើអ្វីមួយដោយប្រុងប្រយ័ត្ន និងគិតគូរគ្រប់ជ្រុងជ្រោយរហូតដល់ចំណុចតូចៗ។" },
+            { ko: "전업", kh: "ការងារពេញម៉ោង / មុខរបរចម្បង", exp: "ការផ្តោតលើមុខរបរ ឬការងារតែមួយមុខជាចម្បង (ឧទាហរណ៍៖ 전업주ប៊ូ ប្រពន្ធមេផ្ទះពេញម៉ោង)។" },
+            { ko: "매출", kh: "ការលក់បាន / យោលទុនលក់", exp: "ចំនួនទឹកប្រាក់សរុបដែលទទួលបានពីការលក់ទំនិញ ឬសេវាកម្ម។" },
+            { ko: "시급하다", kh: "បន្ទាន់ / ប្រញាប់ប្រញាល់", exp: "ស្ថានភាពដែលចាំបាច់ត្រូវតែដោះស្រាយភ្លាមៗ មិនអាចបង្អង់យូរបានឡើយ។" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizWords = [];
+        let isAnswered = false;
+
+        // ចាប់ផ្តើម Quiz ដំបូង
+        function initQuiz() {
+            // កូដនេះនឹងរត់គ្រប់ពាក្យទាំងអស់ (All-in-One) តាមលំដាប់លំដាប់ពាក្យរបស់អ្នក
+            quizWords = [...vocabData]; 
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById("quiz-container").style.display = "block";
+            document.getElementById("result-container").style.display = "none";
+            showQuestion();
+        }
+
+        // បង្ហាញសំណួរតាមលំដាប់
+        function showQuestion() {
+            isAnswered = false;
+            document.getElementById("btn-next").style.display = "none";
+            document.getElementById("kh-translation").style.display = "none";
+            
+            // បើកប៊ូតុងជំនួយឡើងវិញ
+            document.getElementById("power-hint").disabled = false;
+            document.getElementById("power-5050").disabled = false;
+
+            let currentWord = quizWords[currentQuestionIndex];
+            
+            // បច្ចុប្បន្នភាព UI
+            document.getElementById("qn-count").innerText = `សំណួរ: ${currentQuestionIndex + 1}/${quizWords.length}`;
+            document.getElementById("score-display").innerText = `ពិន្ទុ: ${score}`;
+            document.getElementById("ko-word").innerText = currentWord.ko;
+            document.getElementById("kh-translation").innerText = currentWord.kh;
+
+            // គណនា Progress Bar
+            let progressPercent = ((currentQuestionIndex) / quizWords.length) * 100;
+            document.getElementById("progress").style.width = `${progressPercent}%`;
+
+            // បង្កើតចម្លើយជ្រើសរើស (១ ត្រូវ និង ៣ ខុស)
+            let options = [currentWord.kh];
+            
+            // ចាប់យកចម្លើយខុសពីក្នុងបញ្ជី
+            let wrongAnswers = vocabData.filter(w => w.kh !== currentWord.kh).map(w => w.kh);
+            // ឡុកឡាកចម្លើយខុស
+            wrongAnswers.sort(() => 0.5 - Math.random());
+            
+            // យក ៣ គ្រាប់មកលាយ
+            options.push(wrongAnswers[0], wrongAnswers[1], wrongAnswers[2]);
+            // ឡុកឡាកចម្លើយទាំង ៤ ចូលគ្នា
+            options.sort(() => 0.5 - Math.random());
+
+            // បង្ហាញប៊ូតុងចម្លើយលើអេក្រង់
+            let optionsBlock = document.getElementById("options-block");
+            optionsBlock.innerHTML = "";
+            
+            options.forEach(opt => {
+                let btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(btn, opt, currentWord.kh);
+                optionsBlock.appendChild(btn);
+            });
+
+            // ឱ្យអានសំឡេងកូរ៉េដោយស្វ័យប្រវត្តនៅពេលប្តូរសំណួរថ្មី
+            setTimeout(() => { playTTS(currentWord.ko, 'ko'); }, 300);
+        }
+
+        // ពិនិត្យចម្លើយ
+        function checkAnswer(selectedBtn, selectedOpt, correctOpt) {
+            if(isAnswered) return;
+            isAnswered = true;
+
+            let buttons = document.querySelectorAll(".option-btn");
+            
+            if(selectedOpt === correctOpt) {
+                selectedBtn.classList.add("correct");
+                score++;
+                document.getElementById("score-display").innerText = `ពិន្ទុ: ${score}`;
+                // អានសំឡេងខ្មែរពេលឆ្លើយត្រូវដើម្បីឱ្យចាំន័យ
+                playTTS(correctOpt, 'km');
+            } else {
+                selectedBtn.classList.add("incorrect");
+                // បង្ហាញចម្លើយដែលត្រូវ
+                buttons.forEach(btn => {
+                    if(btn.innerText === correctOpt) {
+                        btn.classList.add("correct");
+                    }
+                });
+            }
+
+            // បិទមិនឱ្យចុចចម្លើយផ្សេងទៀត
+            buttons.forEach(btn => btn.disabled = true);
+            document.getElementById("power-hint").disabled = true;
+            document.getElementById("power-5050").disabled = true;
+            
+            // បង្ហាញប៊ូតុង បន្ទាប់
+            document.getElementById("btn-next").style.display = "block";
+        }
+
+        // ទៅសំណួរចុងក្រោយ ឬ បញ្ចប់
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if(currentQuestionIndex < quizWords.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // ប្រើប៊ូតុងជំនួយ: បកប្រែសំណួរ
+        function useHint() {
+            document.getElementById("kh-translation").style.display = "block";
+            document.getElementById("power-hint").disabled = true;
+            // អានសំឡេងខ្មែរជូន
+            let currentWord = quizWords[currentQuestionIndex];
+            playTTS(currentWord.kh, 'km');
+        }
+
+        // ប្រើប៊ូតុងជំនួយ: កាត់ ៥០/៥០
+        function use5050() {
+            let currentWord = quizWords[currentQuestionIndex];
+            let buttons = document.querySelectorAll(".option-btn");
+            let wrongCount = 0;
+
+            for (let btn of buttons) {
+                if (btn.innerText !== currentWord.kh && wrongCount < 2) {
+                    btn.style.opacity = "0.2";
+                    btn.disabled = true;
+                    wrongCount++;
+                }
+            }
+            document.getElementById("power-5050").disabled = true;
+        }
+
+        // ប្រព័ន្ធអានសំឡេងជំនាន់ថ្មី (Dual-Layer TTS Fallback)
+        function playTTS(text, lang) {
+            let langCode = (lang === 'ko') ? 'ko' : 'km';
+            
+            // Layer 1: ប្រើប្រាស់ Google Translate TTS (សំឡេងច្បាស់ល្អ)
+            let audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${langCode}&client=tw-ob&q=${encodeURIComponent(text)}`;
+            let audio = new Audio(audioUrl);
+            
+            let playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Layer 2 Fallback: បើកឯកសារ Local ហើយ Google TTS ត្រូវខកខាន វានឹងរត់ទៅ Web Speech API ភ្លាម
+                    console.log("Google TTS Fail -> Switching to Web Speech API");
+                    let utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = (lang === 'ko') ? 'ko-KR' : 'km-KH';
+                    window.speechSynthesis.speak(utterance);
+                });
+            }
+        }
+
+        // ចុចប៊ូតុង Speaker ដើម្បីស្តាប់ឡើងវិញ
+        function playCurrentAudio() {
+            let currentWord = quizWords[currentQuestionIndex];
+            playTTS(currentWord.ko, 'ko');
+        }
+
+        // បង្ហាញលទ្ធផល និងទម្រង់ Review យ៉ាងលម្អិត
+        function showResult() {
+            document.getElementById("quiz-container").style.display = "none";
+            document.getElementById("result-container").style.display = "block";
+            document.getElementById("final-score").innerText = `អ្នកទទួលបានពិន្ទុ: ${score} / ${quizWords.length}`;
+
+            let reviewBox = document.getElementById("review-box");
+            reviewBox.innerHTML = "";
+
+            // រត់គ្រប់ពាក្យទាំងអស់ដើម្បីបង្ហាញការពន្យល់ពាក្យលម្អិតក្នុង Review Mode
+            vocabData.forEach((item, index) => {
+                let div = document.createElement("div");
+                div.className = "review-item";
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="review-ko">${index + 1}. ${item.ko}</span>
+                        <button onclick="playTTS('${item.ko}', 'ko')" style="background:none; border:none; cursor:pointer; font-size:1.1rem;">🔈</button>
+                    </div>
+                    <div class="review-kh">➔ ${item.kh}</div>
+                    <div class="review-explanation">💡 <b>ការពន្យល់៖</b> ${item.exp}</div>
+                `;
+                reviewBox.appendChild(div);
+            });
+        }
+
+        // លេងឡើងវិញ
+        function restartQuiz() {
+            initQuiz();
+        }
+
+        // ដំណើរការកម្មវិធីពេលបើកដំបូង
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
